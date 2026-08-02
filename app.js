@@ -1,5 +1,7 @@
 // Section 1: Supabase client setup
+// Live Supabase project URL endpoint
 const SUPABASE_URL = 'https://ysrkcykscwpotwwegvrl.supabase.co'; 
+// Public API Anonymous key for authenticating database requests
 const SUPABASE_ANON_KEY = 'sb_publishable_MVU9KG_4C8wkWFjiDD3kHQ_aaBRY5TL'; 
 
 let supabaseClient = null;
