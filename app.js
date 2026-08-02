@@ -9,6 +9,7 @@ let supabaseClient = null;
 // Connect to live Supabase backend when page loads
 if (SUPABASE_URL && SUPABASE_URL.startsWith('https://') && SUPABASE_ANON_KEY && typeof supabase !== 'undefined') {
     try {
+        // Supabase JavaScript SDK Method: Initializes the client instance (Software Development Kit) to query database tables & manage user auth
         supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         console.log('⚡ Connected Live to Supabase Backend Database!');
     } catch (e) {
