@@ -166,62 +166,93 @@ async function loadUserDecisionsAndSkills() {
 //ahmed
 // Checks if email belongs to eue.edu.eg or subdomains
 function validateCampusEmail(emailInput) {
+    // Reject an empty email value before validating it.
     if (!emailInput) return false;
+    // Normalize whitespace and letter casing for a consistent domain check.
     const clean = emailInput.trim().toLowerCase();
+    // Allow EUE email addresses and one optional EUE subdomain.
     const eueCampusRegex = /^[a-zA-Z0-9._%+-]+@([a-zA-Z0-9.-]+\.)?eue\.edu\.eg$/i;
+    // Return whether the normalized address matches the approved format.
     return eueCampusRegex.test(clean);
 }
 
 function initAuthFlow() {
+    // Get the login form from the page.
     const formLogin = document.getElementById('form-login');
+    // Get the registration form from the page.
     const formSignup = document.getElementById('form-signup');
+    // Get the button that opens the registration form.
     const btnShowSignup = document.getElementById('btn-show-signup');
+    // Get the button that returns to the login form.
     const btnShowLogin = document.getElementById('btn-show-login');
+    // Get the shared authentication error message element.
     const authErrorMsg = document.getElementById('auth-error-msg');
+    // Get the button used to sign the student out.
     const btnLogout = document.getElementById('btn-logout');
 
+    // Switch from the login form to the registration form.
     btnShowSignup.addEventListener('click', () => {
+        // Hide the login form.
         formLogin.classList.add('hidden');
+        // Display the registration form.
         formSignup.classList.remove('hidden');
+        // Clear any previous authentication error.
         authErrorMsg.classList.add('hidden');
     });
 
+    // Switch from the registration form back to the login form.
     btnShowLogin.addEventListener('click', () => {
+        // Hide the registration form.
         formSignup.classList.add('hidden');
+        // Display the login form.
         formLogin.classList.remove('hidden');
+        // Clear any previous authentication error.
         authErrorMsg.classList.add('hidden');
     });
 
     // Student Login Form Submit Handler
     formLogin.addEventListener('submit', async (e) => {
+        // Stop the browser from reloading the page on submission.
         e.preventDefault();
+        // Hide a previous error before validating the new attempt.
         authErrorMsg.classList.add('hidden');
+        // Read and trim the entered login email.
         const email = document.getElementById('login-email').value.trim();
+        // Read the entered login password.
         const password = document.getElementById('login-password').value;
 
         // Security check for email domain
         if (!validateCampusEmail(email)) {
+            // Explain why the address cannot be used.
             showAuthError('Security Check Failed: Email MUST end with @eue.edu.eg or campus subdomains (e.g. @faculty.eue.edu.eg).');
+            // Stop processing an invalid login.
             return;
         }
 
         if (!password) {
+            // Require a password before attempting authentication.
             showAuthError('Security Check Failed: Please enter your password.');
+            // Stop processing when the password is missing.
             return;
         }
 
+        // Extract the part of the email before the @ symbol.
         const namePart = email.split('@')[0];
+        // Build a display name from the email username.
         const fullName = namePart.charAt(0).toUpperCase() + namePart.slice(1);
 
         if (supabaseClient) {
             try {
+                // Sign in with the provided credentials.
                 const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
                 if (data && data.user) {
+                    // Store the authenticated Supabase user ID.
                     state.currentUser.id = data.user.id;
                 } else {
                     // Try auto sign-up if first time logging in
                     const { data: suData } = await supabaseClient.auth.signUp({ email, password });
                     if (suData && suData.user) {
+                        // Store the newly created Supabase user ID.
                         state.currentUser.id = suData.user.id;
                     }
                 }
@@ -233,46 +264,65 @@ function initAuthFlow() {
             }
         }
 
+        // Save the login email in the local app state.
         state.currentUser.email = email;
+        // Save the derived display name in the local app state.
         state.currentUser.full_name = fullName;
         
+        // Open the authenticated application experience.
         await loginSuccess();
     });
 
     // Student Registration Form Submit Handler
     formSignup.addEventListener('submit', async (e) => {
+        // Stop the browser from submitting and reloading the page.
         e.preventDefault();
+        // Hide a previous error before validating this registration.
         authErrorMsg.classList.add('hidden');
+        // Read and trim the student's full name.
         const name = document.getElementById('signup-name').value.trim();
+        // Get the degree-program select element.
         const degreeSelect = document.getElementById('signup-degree');
+        // Read the selected degree safely when the select exists.
         const degree = degreeSelect ? degreeSelect.value : '';
+        // Read and trim the student's EUE email address.
         const email = document.getElementById('signup-email').value.trim();
+        // Read the password selected for the new account.
         const password = document.getElementById('signup-password').value;
 
         // Field validation
         if (!name || name.length < 2) {
+            // Tell the student to provide a valid full name.
             showAuthError('Registration Error: Please enter your full name.');
+            // Stop registration when the name is invalid.
             return;
         }
 
         if (!degree) {
+            // Tell the student to choose a degree program.
             showAuthError('Registration Error: Please select your EUE Degree Program from the dropdown.');
+            // Stop registration when no degree is selected.
             return;
         }
 
         // Security check for email domain
         if (!validateCampusEmail(email)) {
+            // Explain the EUE email requirement.
             showAuthError('Registration Denied: Email MUST end with @eue.edu.eg or campus subdomains (e.g. name@eue.edu.eg).');
+            // Stop registration with an unapproved email address.
             return;
         }
 
         if (!password) {
+            // Tell the student that a password is required.
             showAuthError('Registration Denied: Please enter a password.');
+            // Stop registration without a password.
             return;
         }
 
         if (supabaseClient) {
             try {
+                // Create the Supabase account and store profile metadata.
                 const { data } = await supabaseClient.auth.signUp({
                     email,
                     password,
@@ -280,6 +330,7 @@ function initAuthFlow() {
                 });
 
                 if (data && data.user) {
+                    // Store the new authenticated user's ID.
                     state.currentUser.id = data.user.id;
                 }
 
@@ -290,25 +341,39 @@ function initAuthFlow() {
             }
         }
 
+        // Save the student's name in local app state.
         state.currentUser.full_name = name;
+        // Save the selected degree in local app state.
         state.currentUser.degree_course = degree;
+        // Save the student's email in local app state.
         state.currentUser.email = email;
 
+        // Complete login after successful registration.
         await loginSuccess();
     });
 
     // Logout Button Handler
     btnLogout.addEventListener('click', async () => {
+        // End the active Supabase session when one exists.
         if (supabaseClient) await supabaseClient.auth.signOut();
+        // Reset the local user profile to its signed-out state.
         state.currentUser = { id: null, full_name: '', email: '', degree_course: '', offered: [], wanted: [] };
+        // Clear accepted match IDs for the signed-out student.
         state.acceptedCandidates = [];
+        // Clear passed match IDs for the signed-out student.
         state.passedCandidates = [];
 
+        // Return the student to the authentication screen.
         document.getElementById('auth-screen').classList.add('active');
+        // Hide the skill-selection screen.
         document.getElementById('skill-cloud-screen').classList.remove('active');
+        // Hide the match results screen.
         document.getElementById('matches-screen').classList.remove('active');
+        // Hide the accepted-swaps screen.
         document.getElementById('accepted-screen').classList.remove('active');
+        // Hide the application navigation bar.
         document.getElementById('app-nav').classList.add('hidden');
+        // Hide the logged-in user header.
         document.getElementById('user-header-profile').classList.add('hidden');
     });
 }
@@ -318,9 +383,11 @@ function initAuthFlow() {
  * Ensures user profile row is written to Supabase `profiles` table reliably.
  */
 async function ensureProfileInSupabase(existingId, fullName, email, degreeCourse) {
+    // Skip database work when Supabase is unavailable.
     if (!supabaseClient) return;
 
     try {
+        // Look up an existing profile using the student's email address.
         const { data: existingProf } = await supabaseClient
             .from('profiles')
             .select('id, full_name, degree_course')
@@ -328,27 +395,35 @@ async function ensureProfileInSupabase(existingId, fullName, email, degreeCourse
             .maybeSingle();
 
         if (existingProf) {
+            // Reuse the existing profile ID.
             state.currentUser.id = existingProf.id;
+            // Prefer the stored name, falling back to the supplied name.
             state.currentUser.full_name = existingProf.full_name || fullName;
+            // Prefer the stored degree, falling back to the supplied degree.
             state.currentUser.degree_course = existingProf.degree_course || degreeCourse;
+            // Do not create a duplicate profile.
             return;
         }
 
+        // Prepare the data for a new student profile.
         const insertPayload = {
             full_name: fullName,
             email: email,
             degree_course: degreeCourse || 'Student'
         };
         if (existingId && existingId.length > 20) {
+            // Preserve the Supabase auth ID when it is valid.
             insertPayload.id = existingId;
         }
 
+        // Insert the new profile and request its generated record.
         const { data: newProf, error: insErr } = await supabaseClient
             .from('profiles')
             .insert([insertPayload])
             .select();
 
         if (!insErr && newProf && newProf.length > 0) {
+            // Save the newly created profile ID in local state.
             state.currentUser.id = newProf[0].id;
         }
     } catch (err) {
@@ -357,28 +432,43 @@ async function ensureProfileInSupabase(existingId, fullName, email, degreeCourse
 }
 
 function showAuthError(msg) {
+    // Find the authentication error message container.
     const errorBox = document.getElementById('auth-error-msg');
+    // Display the supplied error message.
     errorBox.textContent = msg;
+    // Make the error message visible.
     errorBox.classList.remove('hidden');
+    // Scroll the error into view for the student.
     errorBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 async function loginSuccess() {
+    // Hide the authentication screen.
     document.getElementById('auth-screen').classList.remove('active');
+    // Show the skill-selection screen.
     document.getElementById('skill-cloud-screen').classList.add('active');
+    // Reveal the navigation bar for the authenticated user.
     document.getElementById('app-nav').classList.remove('hidden');
 
     // Reload persistent user skills & accepted matches from Supabase
     await loadUserDecisionsAndSkills();
 
+    // Get the authenticated user's current state.
     const user = state.currentUser;
+    // Build avatar initials from the student's name.
     const initials = (user.full_name || 'ST').split(' ').map(n => n[0]).join('').toUpperCase();
+    // Show the initials in the header avatar.
     document.getElementById('header-avatar-initials').textContent = initials;
+    // Show the student's name in the header.
     document.getElementById('header-user-name').textContent = user.full_name || 'Student';
+    // Show the student's email in the header.
     document.getElementById('header-user-email').textContent = user.email;
+    // Reveal the user profile header.
     document.getElementById('user-header-profile').classList.remove('hidden');
 
+    // Render the skill cloud immediately.
     renderSkillCloud();
+    // Refresh live profiles, then render the updated skill cloud.
     refreshLiveProfilesFromSupabase().then(() => renderSkillCloud());
 }
 
@@ -762,10 +852,14 @@ async function toggleSkillLearned(candidateId) {
 // Section 7: In-app peer chat
 
 function initChatControls() {
+    // Get the chat modal container.
     const chatModal = document.getElementById('chat-modal');
+    // Get the chat close button.
     const btnCloseChat = document.getElementById('btn-close-chat');
+    // Get the message form.
     const chatForm = document.getElementById('chat-form');
 
+    // Close the modal when its close button is clicked.
     btnCloseChat.addEventListener('click', closeChatModal);
 
     chatModal.addEventListener('click', (e) => {
@@ -773,12 +867,17 @@ function initChatControls() {
     });
 
     chatForm.addEventListener('submit', (e) => {
+        // Prevent page navigation after submitting a message.
         e.preventDefault();
+        // Get the message input.
         const input = document.getElementById('chat-input');
+        // Read and trim the message content.
         const text = input.value.trim();
 
         if (text && state.activeChatPeerId) {
+            // Send to the currently active peer.
             sendChatMessage(state.currentUser.id, state.activeChatPeerId, text);
+            // Clear the sent message from the input.
             input.value = '';
         }
     });
@@ -786,32 +885,44 @@ function initChatControls() {
 
 // Opens chat drawer and starts 3-second refresh timer
 function openChatModal(peerId) {
+    // Store the active conversation peer.
     state.activeChatPeerId = peerId;
+    // Find the selected peer profile.
     const peer = state.profiles.find(p => p.id === peerId);
+    // Stop when the peer is unavailable.
     if (!peer) return;
 
     const initials = (peer.full_name || 'ST').split(' ').map(n => n[0]).join('').toUpperCase();
+    // Show the peer initials in the avatar.
     document.getElementById('chat-peer-avatar').textContent = initials;
+    // Show the peer name.
     document.getElementById('chat-peer-name').textContent = peer.full_name;
     document.getElementById('chat-peer-status').textContent = `Matched Student • ${peer.degree_course}`;
 
+    // Display the chat modal.
     document.getElementById('chat-modal').classList.remove('hidden');
 
+    // Load the existing conversation.
     loadChatMessages(peerId);
 
     // Queries Supabase every 3 seconds for new incoming messages
+    // Stop a previous polling timer before starting another.
     if (state.chatPollingTimer) clearInterval(state.chatPollingTimer);
     state.chatPollingTimer = setInterval(() => {
         if (state.activeChatPeerId === peerId) {
+            // Refresh messages only for the active chat.
             loadChatMessages(peerId);
         }
     }, 3000);
 }
 
 function closeChatModal() {
+    // Hide the chat modal.
     document.getElementById('chat-modal').classList.add('hidden');
+    // Clear the selected peer.
     state.activeChatPeerId = null;
     if (state.chatPollingTimer) {
+        // Stop polling for incoming messages.
         clearInterval(state.chatPollingTimer);
         state.chatPollingTimer = null;
     }
@@ -819,6 +930,7 @@ function closeChatModal() {
 
 // Renders message locally first so it displays instantly
 async function sendChatMessage(senderId, receiverId, content) {
+    // Construct a local message for instant display.
     const newMsg = {
         id: `m_${Date.now()}`,
         sender_id: senderId,
@@ -828,7 +940,9 @@ async function sendChatMessage(senderId, receiverId, content) {
     };
 
     // Instant local push
+    // Add the message to the local cache.
     state.messages.push(newMsg);
+    // Render before the database write completes.
     renderChatUI(getConversationMessages(receiverId), senderId);
 
     // Async Supabase insert
@@ -845,6 +959,7 @@ async function sendChatMessage(senderId, receiverId, content) {
 
 // Fetches conversation messages from Supabase
 async function loadChatMessages(peerId) {
+    // Capture the logged-in student's ID.
     const currentUserId = state.currentUser.id;
 
     if (supabaseClient) {
@@ -855,9 +970,11 @@ async function loadChatMessages(peerId) {
                 .or(`and(sender_id.eq.${currentUserId},receiver_id.eq.${peerId}),and(sender_id.eq.${peerId},receiver_id.eq.${currentUserId})`)
                 .order('created_at', { ascending: true });
 
+            // Merge returned messages only after a successful query.
             if (!error && data && data.length > 0) {
                 for (const dbMsg of data) {
                     if (!state.messages.some(m => m.id === dbMsg.id || (m.content === dbMsg.content && m.sender_id === dbMsg.sender_id))) {
+                        // Cache messages not already shown locally.
                         state.messages.push(dbMsg);
                     }
                 }
@@ -867,12 +984,15 @@ async function loadChatMessages(peerId) {
         }
     }
 
+    // Render the refreshed conversation.
     renderChatUI(getConversationMessages(peerId), currentUserId);
 }
 
 // Sorts chat messages by timestamp
 function getConversationMessages(peerId) {
+    // Identify the current student for filtering.
     const currentUserId = state.currentUser.id;
+    // Return this peer's messages sorted chronologically.
     return state.messages.filter(m => 
         (m.sender_id === currentUserId && m.receiver_id === peerId) ||
         (m.sender_id === peerId && m.receiver_id === currentUserId)
@@ -880,15 +1000,19 @@ function getConversationMessages(peerId) {
 }
 
 function renderChatUI(messages, currentUserId) {
+    // Get the chat-bubble container.
     const box = document.getElementById('chat-messages-box');
 
     if (!messages || messages.length === 0) {
+        // Show guidance when the conversation is empty.
         box.innerHTML = `<div style="text-align: center; color: var(--text-muted); margin-top: 40px;">Say hi to coordinate your skill swap session!</div>`;
         return;
     }
 
     box.innerHTML = messages.map(m => {
+        // Choose the bubble style based on who sent the message.
         const isSent = (m.sender_id === currentUserId);
+        // Format the timestamp for the chat bubble.
         const timeStr = new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
         return `
@@ -899,6 +1023,7 @@ function renderChatUI(messages, currentUserId) {
         `;
     }).join('');
 
+    // Scroll so the most recent message stays visible.
     box.scrollTop = box.scrollHeight;
 }
 
@@ -1007,27 +1132,39 @@ function getDefaultProfilesSeed() {
 // Section 9: Screen navigation
 
 function initNavSteps() {
+    // Get every navigation step button.
     const stepBtns = document.querySelectorAll('.step-btn');
+    // Attach navigation behavior to each button.
     stepBtns.forEach(btn => {
+        // Switch screens when a step button is clicked.
         btn.addEventListener('click', () => {
+            // Read the screen ID stored on the clicked button.
             const targetScreen = btn.getAttribute('data-screen');
+            // Activate the requested screen.
             switchScreen(targetScreen);
         });
     });
 }
 
 async function switchScreen(screenId) {
+    // Mark every screen as inactive.
     document.querySelectorAll('.screen-view').forEach(s => s.classList.remove('active'));
+    // Mark every navigation button as inactive.
     document.querySelectorAll('.step-btn').forEach(b => b.classList.remove('active'));
 
+    // Show the requested screen.
     document.getElementById(screenId).classList.add('active');
 
+    // Locate the button associated with the requested screen.
     const activeBtn = document.querySelector(`.step-btn[data-screen="${screenId}"]`);
+    // Highlight the matching navigation button when it exists.
     if (activeBtn) activeBtn.classList.add('active');
 
     if (screenId === 'matches-screen') {
+        // Load and render candidate matches for the matches screen.
         await renderCandidateMatches();
     } else if (screenId === 'accepted-screen') {
+        // Render saved accepted swaps for the accepted screen.
         renderAcceptedSwaps();
     }
 }
@@ -1035,37 +1172,56 @@ async function switchScreen(screenId) {
 //http post request: When a student submits feedback in our bug reporting modal, our system triggers an asynchronous HTTP email relay that delivers the report straight
 //  to our developer's Gmail account (theblankguy313@gmail.com) in real time!
 function initBugReportingModal() {
+    // Get the button that opens bug reporting.
     const btnReport = document.getElementById('btn-report-bug');
+    // Get the bug-report modal.
     const bugModal = document.getElementById('bug-modal');
+    // Get the modal close button.
     const btnClose = document.getElementById('btn-close-bug');
+    // Get the modal cancel button.
     const btnCancel = document.getElementById('btn-cancel-bug');
+    // Get the report submission button.
     const btnSubmit = document.getElementById('btn-submit-bug');
+    // Get the report text input.
     const textInput = document.getElementById('bug-text-input');
+    // Get the successful-submission message.
     const successMsg = document.getElementById('bug-success-msg');
 
+    // Do nothing if the required reporting UI is absent.
     if (!btnReport || !bugModal) return;
 
+    // Open and reset the bug-report modal.
     btnReport.addEventListener('click', () => {
+        // Display the modal.
         bugModal.classList.remove('hidden');
+        // Hide a previous success message.
         if (successMsg) successMsg.classList.add('hidden');
+        // Clear text from a previous report.
         if (textInput) textInput.value = '';
     });
 
+    // Create one reusable modal-closing function.
     const closeModal = () => bugModal.classList.add('hidden');
 
     if (btnClose) btnClose.addEventListener('click', closeModal);
     if (btnCancel) btnCancel.addEventListener('click', closeModal);
 
     bugModal.addEventListener('click', (e) => {
+        // Close only when the modal backdrop itself is clicked.
         if (e.target === bugModal) closeModal();
     });
 
     if (btnSubmit) {
+        // Send the report when the student clicks the submit button.
         btnSubmit.addEventListener('click', async () => {
+            // Read the entered report text safely.
             const reportContent = textInput ? textInput.value.trim() : '';
+            // Use the current student's name or a fallback label.
             const studentName = state.currentUser.full_name || 'Campus Student';
+            // Use the current student's email or a fallback address.
             const studentEmail = state.currentUser.email || 'student@eue.edu.eg';
 
+            // Prevent duplicate report submissions while sending.
             btnSubmit.disabled = true;
             btnSubmit.textContent = 'Sending Email... ⏳';
 //We integrated FormSubmit, an AJAX email gateway API. 
@@ -1087,12 +1243,15 @@ function initBugReportingModal() {
                     })
                 });
             } catch (err) {
+                // Log a non-blocking notice if email dispatch fails.
                 console.warn('Email dispatch notice:', err);
             }
 
+            // Restore the button after the send attempt.
             btnSubmit.disabled = false;
             btnSubmit.textContent = 'Report Sent ✅';
 
+            // Reveal the success message when it exists.
             if (successMsg) successMsg.classList.remove('hidden');
         });
     }
