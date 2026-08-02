@@ -472,6 +472,7 @@ async function loginSuccess() {
 
 // Section 5: Skill cloud selector
 
+// Initializes controls for selecting, filtering, and searching skills
 function initSkillCloudControls() {
     const modeOfferedBtn = document.getElementById('mode-offered-btn');
     const modeWantedBtn = document.getElementById('mode-wanted-btn');
@@ -479,10 +480,12 @@ function initSkillCloudControls() {
     const catChips = document.querySelectorAll('.cat-chip');
     const btnSaveFind = document.getElementById('btn-save-find-matches');
 
+    // when clicked, state.cloudMode is set to offered and button is highlighted
     modeOfferedBtn.addEventListener('click', () => {
         state.cloudMode = 'offered';
         modeOfferedBtn.classList.add('active');
         modeWantedBtn.classList.remove('active');
+        // renderSkillCloud is called to update the UI based on the new mode
         renderSkillCloud();
     });
 
@@ -494,10 +497,13 @@ function initSkillCloudControls() {
     });
 
     searchInput.addEventListener('input', (e) => {
+        // Saves the search query and converts it to lowercase
         state.searchQuery = e.target.value.toLowerCase();
+        // redraws the skill cloud based on the search query
         renderSkillCloud();
     });
 
+    // Makes each category chip clickable
     catChips.forEach(chip => {
         chip.addEventListener('click', () => {
             catChips.forEach(c => c.classList.remove('active'));
@@ -507,48 +513,62 @@ function initSkillCloudControls() {
         });
     });
 
+    // When the save button is clicked, it syncs the user's skills to Supabase
     btnSaveFind.addEventListener('click', async () => {
+        // saves the user's skills to Supabase
         await syncUserSkillsToSupabase();
+        // changes the app view to the matches-screen
         switchScreen('matches-screen');
+        // Loads the candidate matches
         await renderCandidateMatches();
     });
 }
 
+// Renders the skill cloud based on the current state (filters and search query)
 function renderSkillCloud() {
     const container = document.getElementById('skill-nodes-container');
+    // Retrieves the current user's information
     const user = state.currentUser;
 
+    // sets the count of offered and wanted skills in the UI
     document.getElementById('count-offered').textContent = user.offered.length;
     document.getElementById('count-wanted').textContent = user.wanted.length;
 
+    // Builds a filtered list of skills
     const filteredSkills = state.skills.filter(s => {
         const matchesCat = (state.activeCategory === 'all') || (s.category === state.activeCategory);
         const matchesSearch = s.skill_name.toLowerCase().includes(state.searchQuery);
         return matchesCat && matchesSearch;
     });
 
+    // Handles the case where no skills match the filters or search query
     if (filteredSkills.length === 0) {
         container.innerHTML = `<p style="color: var(--text-muted); text-align: center;">No skills found.</p>`;
         return;
     }
 
+    // Generates the HTML for each skill bubble based on whether the user has selected it as offered or wanted
     container.innerHTML = filteredSkills.map(s => {
         const isOffered = user.offered.includes(s.id);
         const isWanted = user.wanted.includes(s.id);
 
+        // Sets the CSS class for the skill bubble based on its selection state
         let bubbleClass = 'skill-bubble';
         if (isOffered) bubbleClass += ' selected-offered';
         if (isWanted) bubbleClass += ' selected-wanted';
 
+        // Returns the HTML for the skill bubble, including the skill name and icons
         return `
             <div class="${bubbleClass}" onclick="toggleSkillSelection(${s.id})">
                 <span>${s.skill_name}</span>
                 ${isOffered ? '✓' : ''} ${isWanted ? '★' : ''}
             </div>
         `;
+        // Joins all the skill bubble HTML strings into a single string
     }).join('');
 }
 
+// Toggles the selection of a skill as offered or wanted based on the current cloud mode
 async function toggleSkillSelection(skillId) {
     const user = state.currentUser;
     const mode = state.cloudMode;
@@ -567,6 +587,7 @@ async function toggleSkillSelection(skillId) {
         }
     }
 
+    // Re-render the skill cloud to reflect the current selection state
     renderSkillCloud();
 }
 
@@ -600,6 +621,7 @@ function computeMatches() {
     const candidates = state.profiles.filter(p => p.id !== user.id && !state.passedCandidates.includes(p.id));
     const results = [];
 
+    // Loop through each candidate to find skill matches
     for (const candidate of candidates) {
         // Mutual Swap check: see if both students have skills the other wants to learn
         const directMatchIds = (candidate.offered || []).filter(s => user.wanted.includes(s));
