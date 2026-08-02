@@ -163,7 +163,7 @@ async function loadUserDecisionsAndSkills() {
 }
 
 // Section 4: Campus email auth & security
-
+//ahmed
 // Checks if email belongs to eue.edu.eg or subdomains
 function validateCampusEmail(emailInput) {
     if (!emailInput) return false;
