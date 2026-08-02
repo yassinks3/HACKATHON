@@ -1,5 +1,3 @@
-//LLLLLLLLLLLLLLLLLL
-
 // Section 1: Supabase client setup
 const SUPABASE_URL = 'https://ysrkcykscwpotwwegvrl.supabase.co'; 
 const SUPABASE_ANON_KEY = 'sb_publishable_MVU9KG_4C8wkWFjiDD3kHQ_aaBRY5TL'; 
