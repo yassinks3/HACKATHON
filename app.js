@@ -1220,8 +1220,9 @@ function initBugReportingModal() {
             const studentEmail = state.currentUser.email || 'student@eue.edu.eg';
 
             // Prevent duplicate report submissions while sending.
-            btnSubmit.disabled = true;
-            // FormSubmit API: Sends bug report data directly to the dev team via HTTP POST
+            // FormSubmit is an email service API that takes data submitted in our web app and sends it straight to our developer team's inbox.
+            // We use an HTTP POST request because POST is used for sending new data (like a student's bug report and contact info) to a server.
+            // Using JavaScript fetch(), it sends the POST request silently in the background, so the student gets an instant green confirmation message without refreshing or leaving the page!
             try {
                 // Dispatch real live email notification to theblankguy313@gmail.com
                 await fetch('https://formsubmit.co/ajax/theblankguy313@gmail.com', {
