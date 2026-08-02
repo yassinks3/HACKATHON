@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillSwap | EUE Campus Platform</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="styles.css?v=20260802_FINAL_10">
+    
+    <!-- Supabase JS Client (CDN) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="app-wrapper">
+        <!-- Top Navigation Header -->
+        <header class="main-header">
+            <div class="header-brand">
+                <div class="logo-box">
+                    <span class="logo-symbol">⇄</span>
+                    <span class="logo-name">SkillSwap</span>
+                </div>
+                <span class="domain-badge">Campus Platform • eue.edu.eg Domain</span>
+            </div>
+
+            <!-- Header Navigation Steps -->
+            <nav id="app-nav" class="nav-steps hidden">
+                <button class="step-btn active" data-screen="skill-cloud-screen">
+                    <span class="step-num">1</span> Skill Circle Cloud (~50)
+                </button>
+                <button class="step-btn" data-screen="matches-screen">
+                    <span class="step-num">2</span> Peer Matches & Choice
+                </button>
+                <button class="step-btn" data-screen="accepted-screen">
+                    <span class="step-num">3</span> My Swaps (<span id="accepted-count-badge">0</span>)
+                </button>
+            </nav>
+
+            <div id="user-header-profile" class="header-user-profile hidden">
+                <div class="header-avatar" id="header-avatar-initials">LM</div>
+                <div class="header-user-info">
+                    <span class="header-user-name" id="header-user-name">Laila Mahmoud</span>
+                    <span class="header-user-email" id="header-user-email">lmahmo01@eue.edu.eg</span>
+                </div>
+                <button id="btn-logout" class="btn btn-outline btn-xs">Log Out</button>
+            </div>
+        </header>
+
+        <!-- SCREEN 1: LOGIN & SIGN-UP AUTHENTICATION -->
+        <section id="auth-screen" class="screen-view active">
+            <div class="auth-container">
+                <div class="auth-card card">
+                    <div class="auth-header">
+                        <div class="auth-logo">⇄</div>
+                        <h2>SkillSwap Student Login</h2>
+                        <p class="auth-subtitle">Peer-to-Peer Skill Exchange for University Students</p>
+                        <div class="campus-domain-pill">
+                            <span class="lock-icon">🔒</span> All Campus Email Domains: <code>*eue.edu.eg</code>
+                        </div>
+                        <div id="auth-error-msg" class="auth-error hidden" style="margin-top: 10px; width: 100%;"></div>
+                    </div>
+
+                    <!-- LOGIN FORM -->
+                    <form id="form-login" class="auth-form">
+                        <div class="form-group">
+                            <label for="login-email">Campus Email:</label>
+                            <input type="email" id="login-email" class="custom-input" placeholder="student@eue.edu.eg or @faculty.eue.edu.eg" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="login-password">Password:</label>
+                            <input type="password" id="login-password" class="custom-input" placeholder="••••••••" required>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block">Log In to SkillSwap</button>
+
+                        <div class="auth-toggle-box">
+                            <p>Don't have an account?</p>
+                            <button type="button" id="btn-show-signup" class="btn-link">Create an Account / Sign Up</button>
+                        </div>
+                    </form>
+
+                    <!-- SIGN-UP FORM -->
+                    <form id="form-signup" class="auth-form hidden">
+                        <div class="form-group">
+                            <label for="signup-name">Full Name:</label>
+                            <input type="text" id="signup-name" class="custom-input" placeholder="e.g. Laila Mahmoud" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="signup-degree">Degree / Faculty (EUE Program):</label>
+                            <select id="signup-degree" class="custom-input" required>
+                                <option value="" disabled selected>-- Select your EUE Degree Program --</option>
+                                <optgroup label=" UOL Programmes (University of London)">
+                                    <option value="BSc (Hons) Computer Science">UOL - BSc (Hons) Computer Science</option>
+                                    <option value="BSc (Hons) Cyber Security and Networks">UOL - BSc (Hons) Cyber Security & Networks</option>
+                                    <option value="BA (Hons) Animation and Game Design">UOL - BA (Hons) Animation & Game Design</option>
+                                    <option value="LL.B. (Hons) Law">UOL - LL.B. (Hons) Law</option>
+                                    <option value="BSc (Hons) Psychology">UOL - BSc (Hons) Psychology</option>
+                                    <option value="International Foundation Programme">UOL - International Foundation Programme</option>
+                                </optgroup>
+                                <optgroup label=" University of Lancashire Programmes">
+                                    <option value="School of Engineering">Lancashire - School of Engineering</option>
+                                    <option value="MBBS Bachelor of Medicine and Surgery">Lancashire - MBBS Medicine & Surgery</option>
+                                </optgroup>
+                                <optgroup label=" UEL Programmes (University of East London)">
+                                    <option value="BA (Hons) Fashion Design">UEL - BA (Hons) Fashion Design</option>
+                                    <option value="BA (Hons) Filmmaking">UEL - BA (Hons) Filmmaking</option>
+                                    <option value="BA (Hons) Fine Art">UEL - BA (Hons) Fine Art</option>
+                                    <option value="BA (Hons) Graphic Design">UEL - BA (Hons) Graphic Design</option>
+                                    <option value="BA (Hons) Interior Design">UEL - BA (Hons) Interior Design</option>
+                                    <option value="BSc (Hons) Human Resource Management">UEL - BSc (Hons) HR Management</option>
+                                    <option value="BA (Hons) Sports Journalism">UEL - BA (Hons) Sports Journalism</option>
+                                    <option value="BSc (Hons) Marketing">UEL - BSc (Hons) Marketing</option>
+                                    <option value="BA (Hons) Digital Media and Communication">UEL - BA (Hons) Digital Media</option>
+                                    <option value="BSc (Hons) Physiotherapy">UEL - BSc (Hons) Physiotherapy</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="signup-email">Campus Email (ending with eue.edu.eg):</label>
+                            <input type="email" id="signup-email" class="custom-input" placeholder="name@eue.edu.eg or @faculty.eue.edu.eg" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="signup-password">Choose Password:</label>
+                            <input type="password" id="signup-password" class="custom-input" placeholder="••••••••" required>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block">Sign Up & Choose Skills</button>
+
+                        <div class="auth-toggle-box">
+                            <p>Already registered?</p>
+                            <button type="button" id="btn-show-login" class="btn-link">Back to Login</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- SCREEN 2: 50-SKILL CIRCLE BUBBLE CLOUD SELECTOR -->
+        <section id="skill-cloud-screen" class="screen-view">
+            <div class="cloud-header card">
+                <div class="cloud-header-top">
+                    <div>
+                        <h2>Select Skills in the Skill Circle (~50 Available)</h2>
+                        <p>Click skill bubbles below to select your offered or wanted skills.</p>
+                    </div>
+                    
+                    <!-- Selection Mode Toggle -->
+                    <div class="cloud-mode-toggle">
+                        <button id="mode-offered-btn" class="cloud-mode-btn active offered">
+                            <span class="dot"></span> Skills I Have (Offer)
+                        </button>
+                        <button id="mode-wanted-btn" class="cloud-mode-btn wanted">
+                            <span class="dot"></span> Skills I Want (Learn)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Category Filters & Search -->
+                <div class="cloud-filter-bar">
+                    <input type="text" id="skill-search" class="custom-input search-input" placeholder="🔍 Search poetry, french, python, literature...">
+                    <div class="category-chips">
+                        <button class="cat-chip active" data-cat="all">All (50)</button>
+                        <button class="cat-chip" data-cat="Arts & Poetry">Arts & Poetry</button>
+                        <button class="cat-chip" data-cat="Languages">Languages</button>
+                        <button class="cat-chip" data-cat="Technology">Technology</button>
+                        <button class="cat-chip" data-cat="Sciences">Sciences</button>
+                        <button class="cat-chip" data-cat="Humanities">Humanities</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SKILL CIRCLE BUBBLE CLOUD CONTAINER -->
+            <div class="skill-circle-wrapper card">
+                <div id="skill-nodes-container" class="skill-nodes-cloud">
+                    <!-- 50 Dynamic Floating Bubble Nodes Populated by app.js -->
+                </div>
+            </div>
+
+            <!-- SKILL CLOUD FOOTER ACTION BAR -->
+            <div class="cloud-footer-bar card">
+                <div class="selection-counts">
+                    <span class="count-badge offered-badge">Skills Offered: <strong id="count-offered">0</strong></span>
+                    <span class="count-badge wanted-badge">Skills Desired: <strong id="count-wanted">0</strong></span>
+                </div>
+                <button id="btn-save-find-matches" class="btn btn-primary btn-lg">
+                    ⚡ Find Matching Students & Choose Swaps →
+                </button>
+            </div>
+        </section>
+
+        <!-- SCREEN 3: MATCHMAKING & CHOICE DECISION HUB -->
+        <section id="matches-screen" class="screen-view">
+            <div class="matches-header-card card">
+                <div class="matches-title-row">
+                    <div>
+                        <h2>Peer Skill Matches & Choice Hub</h2>
+                        <p>Evaluate peer student matches and choose who you want to swap skills with!</p>
+                    </div>
+                    <div class="match-stats-box">
+                        <div class="m-stat"><span class="m-num" id="total-matches-count">0</span> Matches</div>
+                        <div class="m-stat mutual"><span class="m-num" id="mutual-matches-count">0</span> Mutual Swaps</div>
+                    </div>
+                </div>
+
+                <div class="match-legend">
+                    <span class="legend-item mutual">⇄ Mutual Swap (Both have skills the other wants)</span>
+                    <span class="legend-item direct">→ 1-Way Match (They offer what you want)</span>
+                </div>
+            </div>
+
+            <!-- CANDIDATES CHOICE LIST -->
+            <div id="candidates-choice-grid" class="candidates-grid">
+                <!-- Populated dynamically by app.js with Accept / Pass buttons -->
+            </div>
+        </section>
+
+        <!-- SCREEN 4: ACCEPTED SKILL SWAPS -->
+        <section id="accepted-screen" class="screen-view">
+            <div class="card">
+                <h2>My Accepted Skill Swaps</h2>
+                <p>Students you have accepted for skill exchange sessions. Click <strong>💬 Chat</strong> to coordinate where to meet on campus!</p>
+                
+                <div id="accepted-swaps-list" class="candidates-grid" style="margin-top: 20px;">
+                    <!-- Dynamically populated -->
+                </div>
+            </div>
+        </section>
+
+        <!-- IN-APP PEER MESSAGING CHAT DRAWER MODAL -->
+        <div id="chat-modal" class="chat-modal-overlay hidden">
+            <div class="chat-drawer card">
+                <div class="chat-header">
+                    <div class="chat-user-meta">
+                        <div class="c-avatar" id="chat-peer-avatar">YH</div>
+                        <div>
+                            <h3 id="chat-peer-name">Youssef Hassan</h3>
+                            <p id="chat-peer-status" class="chat-status-sub">Online • Swapping Python ⇄ French</p>
+                        </div>
+                    </div>
+                    <button id="btn-close-chat" class="btn btn-outline btn-xs">✕ Close</button>
+                </div>
+
+                <!-- Messages Container -->
+                <div id="chat-messages-box" class="chat-messages-container">
+                    <!-- Speech bubbles rendered dynamically -->
+                </div>
+
+                <!-- Chat Input Form -->
+                <form id="chat-form" class="chat-input-bar">
+                    <input type="text" id="chat-input" class="custom-input" placeholder="Type a message (e.g. Meet at RHB Library Floor 2 at 3pm)..." autocomplete="off" required>
+                    <button type="submit" class="btn btn-primary">Send 💬</button>
+                </form>
+            </div>
+        </div>
+
+    <!-- Floating Bottom-Right Feature Widget -->
+    <div id="floating-report-widget" class="floating-report-widget">
+        <button id="btn-report-bug" class="btn-report-floating">
+            <span class="btn-title">🐛 Report Bug</span>
+            <span class="btn-subtext">Submit Feedback</span>
+        </button>
+    </div>
+
+    <!-- BEAUTIFUL BUG REPORTING MODAL -->
+    <div id="bug-modal" class="modal-overlay hidden">
+        <div class="modal-card card">
+            <div class="modal-header">
+                <div class="modal-title-row">
+                    <span class="modal-icon">🐛</span>
+                    <h3>Campus Issue & Bug Reporting</h3>
+                </div>
+                <button id="btn-close-bug" class="btn-close-icon">✕</button>
+            </div>
+            <div class="modal-body">
+                <p style="color: var(--text-secondary); margin-bottom: 8px; font-size: 0.9rem;">
+                    Found a bug or have feedback? Submit your report directly to our development team:
+                </p>
+                <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid var(--border-blue); color: var(--accent-blue); padding: 6px 12px; border-radius: var(--radius-md); font-size: 0.82rem; font-family: 'Fira Code', monospace; margin-bottom: 12px;">
+                    📧 Live Relay: <strong>Campus Developer Support Team</strong>
+                </div>
+                <textarea id="bug-text-input" class="custom-input" rows="4" placeholder="Describe the bug or feature request (e.g. Skill bubble layout adjustment on mobile)..." style="width: 100%; resize: vertical; margin-bottom: 10px;"></textarea>
+                <div id="bug-success-msg" class="auth-error hidden" style="background: rgba(16, 185, 129, 0.15); border-color: #10b981; color: #10b981; margin-bottom: 10px; font-weight: 600;">
+                    ✅ Your report has been sent directly to our campus developer team! We will review your feedback and resolve your issue shortly.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="btn-submit-bug" class="btn btn-primary btn-sm">Submit Report 🚀</button>
+                <button id="btn-cancel-bug" class="btn btn-outline btn-sm">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main JavaScript App -->
+    <script src="app.js?v=20260802_FINAL_10"></script>
+</body>
+</html>
