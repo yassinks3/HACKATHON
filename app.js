@@ -1221,9 +1221,7 @@ function initBugReportingModal() {
 
             // Prevent duplicate report submissions while sending.
             btnSubmit.disabled = true;
-            btnSubmit.textContent = 'Sending Email... ⏳';
-            // We integrated FormSubmit, an AJAX email gateway API. 
-            // It allows our frontend application to securely send bug reports and feedback as an asynchronous JSON POST request directly to our developer support team.
+            // FormSubmit API: Sends bug report data directly to the dev team via HTTP POST
             try {
                 // Dispatch real live email notification to theblankguy313@gmail.com
                 await fetch('https://formsubmit.co/ajax/theblankguy313@gmail.com', {
