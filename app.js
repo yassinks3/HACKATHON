@@ -661,6 +661,7 @@ function computeMatches() {
     });
 }
 
+// Displays the candidate matches in the UI
 async function renderCandidateMatches() {
     await refreshLiveProfilesFromSupabase();
 
@@ -680,12 +681,15 @@ async function renderCandidateMatches() {
         return;
     }
 
+    // Generates HTML for each candidate match card
     container.innerHTML = matches.map(m => {
         const c = m.candidate;
         const initials = (c.full_name || 'ST').split(' ').map(n => n[0]).join('').toUpperCase();
         const isAccepted = m.isAccepted;
         const isPassed = m.isPassed;
 
+        // Returns the HTML for a candidate card, including their profile info, skill matches, and action buttons
+        // Where $ evaluates the variables to insert dynamic content into the HTML template
         return `
             <div class="candidate-card ${m.isMutualSwap ? 'is-mutual' : ''}" style="${isAccepted ? 'border-color: #10B981; box-shadow: 0 0 15px rgba(16, 185, 129, 0.25);' : ''}">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -741,7 +745,9 @@ async function renderCandidateMatches() {
     }).join('');
 }
 
+// Accepts a candidate match, saves the decision to Supabase
 async function acceptMatch(candidateId) {
+    // Add the candidate ID to the acceptedCandidates array if not already present
     if (!state.acceptedCandidates.includes(candidateId)) {
         state.acceptedCandidates.push(candidateId);
     }
